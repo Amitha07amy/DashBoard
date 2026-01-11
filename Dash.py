@@ -2,14 +2,19 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
+from pathlib import Path
 
+# =========================
 # CONFIG
+# =========================
 st.set_page_config(
     page_title="Solar Energy Impact Dashboard",
     layout="wide"
 )
 
-# SIMPLE ACCESS CONTROL
+# =========================
+# ACCESS CONTROL
+# =========================
 APP_PASSWORD = "senoko_solar_2026"
 
 if "authenticated" not in st.session_state:
@@ -32,26 +37,38 @@ if not st.session_state.authenticated:
 
     st.stop()
 
+# =========================
 # LOAD DATA
+# =========================
 @st.cache_data
 def load_data():
-    return pd.read_excel(Path(__file__).parent / "data" / "Master_Energy_Monthly_FINAL_WITH_COST.xlsx")
+    file_path = Path(__file__).parent / "data" / "Master_Energy_Monthly_FINAL_WITH_COST.xlsx"
+    return pd.read_excel(file_path)
 
-df = load_data
+df = load_data()
 
-# Create Month-Year label
+# =========================
+# DATE HANDLING (FIXED)
+# =========================
 df["Month_Year"] = pd.to_datetime(
-    df["Year"].astype(str) + "-" + df["Month"] + "-01",
+    df["Month"] + " " + df["Year"].astype(str),
+    format="%B %Y",
     errors="coerce"
-).dt.strftime("%b %Y")
+)
 
+df = df.sort_values("Month_Year")
+
+# =========================
 # HEADER
+# =========================
 st.title("Solar Energy Impact & Cost Interpretation Dashboard")
 st.caption(
     "20 Senoko Drive | Monthly Energy & Financial Summary (Billing-Cycle Aligned)"
 )
 
+# =========================
 # FILTERS
+# =========================
 col1, col2, col3 = st.columns([3, 1.5, 1.5])
 
 with col2:
@@ -73,8 +90,9 @@ filtered_df = df[
     (df["Data_Trust"].isin(trust_filter))
 ]
 
+# =========================
 # KPI SECTION
-
+# =========================
 st.subheader("Executive Summary")
 
 k1, k2, k3, k4 = st.columns(4)
@@ -104,7 +122,9 @@ k4.metric(
     f"{grid_dependency:.1f}%"
 )
 
-# SOLAR GENERATION TREND
+# =========================
+# SOLAR GENERATION
+# =========================
 st.subheader("Monthly Solar Generation")
 
 fig_solar = px.bar(
@@ -116,23 +136,24 @@ fig_solar = px.bar(
 )
 st.plotly_chart(fig_solar, use_container_width=True)
 
-# ENERGY MIX
+# =========================
+# ENERGY MIX (STACKED)
+# =========================
 st.subheader("Energy Supply Mix")
 
 fig_mix = px.bar(
     filtered_df,
     x="Month_Year",
-    y=[
-        "Grid_Import_kWh",
-        "Solar_Self_kWh",
-        "Grid_Export_kWh"
-    ],
-    title="Energy Supply Mix by Month",
-    labels={"value": "Energy (kWh)", "variable": "Source"}
+    y=["Grid_Import_kWh", "Solar_Self_kWh", "Grid_Export_kWh"],
+    title="Monthly Energy Supply Mix",
+    labels={"value": "Energy (kWh)", "variable": "Source"},
 )
+fig_mix.update_layout(barmode="stack")
 st.plotly_chart(fig_mix, use_container_width=True)
 
-# BILL IMPACT WATERFALL
+# =========================
+# COST WATERFALL
+# =========================
 st.subheader("Impact of Solar on Electricity Cost")
 
 grid_cost = filtered_df["Grid_Import_Cost_SGD"].sum()
@@ -140,14 +161,13 @@ solar_savings = filtered_df["Solar_Savings_SGD"].sum()
 export_revenue = filtered_df["Export_Revenue_SGD"].sum()
 
 fig_waterfall = go.Figure(go.Waterfall(
-    name="Cost Impact",
     orientation="v",
     measure=["absolute", "relative", "relative", "total"],
     x=[
         "Grid Import Cost",
         "Solar Savings",
         "Export Revenue",
-        "Net Energy Impact"
+        "Net Energy Cost"
     ],
     y=[
         grid_cost,
@@ -164,8 +184,10 @@ fig_waterfall.update_layout(
 
 st.plotly_chart(fig_waterfall, use_container_width=True)
 
-# GRID DEPENDENCY TREND
-st.subheader("Grid Electricity Dependency")
+# =========================
+# GRID DEPENDENCY
+# =========================
+st.subheader("Grid Electricity Consumption Trend")
 
 fig_grid = px.line(
     filtered_df,
@@ -175,7 +197,9 @@ fig_grid = px.line(
 )
 st.plotly_chart(fig_grid, use_container_width=True)
 
-# DATA TRUST & VALIDATION
+# =========================
+# DATA VALIDATION
+# =========================
 st.subheader("Data Trust & Energy Balance Validation")
 
 st.dataframe(
