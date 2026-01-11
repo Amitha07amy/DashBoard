@@ -17,13 +17,20 @@ if "authenticated" not in st.session_state:
 
 if not st.session_state.authenticated:
     st.title("🔒 Restricted Access")
-    pwd = st.text_input("Enter access password", type="password")
 
-    if pwd == APP_PASSWORD:
-        st.session_state.authenticated = True
-        st.experimental_rerun()
-    else:
-        st.stop()
+    password_input = st.text_input(
+        "Enter access password",
+        type="password"
+    )
+
+    if password_input:
+        if password_input == APP_PASSWORD:
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("Incorrect password")
+
+    st.stop()
 
 # LOAD DATA
 @st.cache_data
