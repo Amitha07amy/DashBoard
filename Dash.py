@@ -35,9 +35,9 @@ if not st.session_state.authenticated:
 # LOAD DATA
 @st.cache_data
 def load_data():
-    return pd.read_excel("/Users/amitha/Downloads/Master_Energy_Monthly_FINAL_WITH_COST.xlsx")
+    DATA_PATH = Path(__file__).parent / "data" / "Master_Energy_Monthly_FINAL_WITH_COST.xlsx"
 
-df = load_data()
+df = pd.read_excel(DATA_PATH)
 
 # Create Month-Year label
 df["Month_Year"] = pd.to_datetime(
