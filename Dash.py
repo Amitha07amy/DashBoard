@@ -48,7 +48,7 @@ def load_data():
 df = load_data()
 
 # =========================
-# DATE HANDLING (FIXED)
+# DATE HANDLING
 # =========================
 df["Month_Year"] = pd.to_datetime(
     df["Month"] + " " + df["Year"].astype(str),
@@ -137,7 +137,7 @@ fig_solar = px.bar(
 st.plotly_chart(fig_solar, use_container_width=True)
 
 # =========================
-# ENERGY MIX (STACKED)
+# ENERGY MIX
 # =========================
 st.subheader("Energy Supply Mix")
 
@@ -145,8 +145,8 @@ fig_mix = px.bar(
     filtered_df,
     x="Month_Year",
     y=["Grid_Import_kWh", "Solar_Self_kWh", "Grid_Export_kWh"],
-    title="Monthly Energy Supply Mix",
     labels={"value": "Energy (kWh)", "variable": "Source"},
+    title="Monthly Energy Supply Mix"
 )
 fig_mix.update_layout(barmode="stack")
 st.plotly_chart(fig_mix, use_container_width=True)
@@ -163,12 +163,7 @@ export_revenue = filtered_df["Export_Revenue_SGD"].sum()
 fig_waterfall = go.Figure(go.Waterfall(
     orientation="v",
     measure=["absolute", "relative", "relative", "total"],
-    x=[
-        "Grid Import Cost",
-        "Solar Savings",
-        "Export Revenue",
-        "Net Energy Cost"
-    ],
+    x=["Grid Import Cost", "Solar Savings", "Export Revenue", "Net Energy Cost"],
     y=[
         grid_cost,
         -solar_savings,
@@ -176,16 +171,14 @@ fig_waterfall = go.Figure(go.Waterfall(
         grid_cost - solar_savings - export_revenue
     ]
 ))
-
 fig_waterfall.update_layout(
     title="Electricity Cost Impact After Solar",
     yaxis_title="SGD"
 )
-
 st.plotly_chart(fig_waterfall, use_container_width=True)
 
 # =========================
-# GRID DEPENDENCY
+# GRID TREND
 # =========================
 st.subheader("Grid Electricity Consumption Trend")
 
@@ -198,18 +191,14 @@ fig_grid = px.line(
 st.plotly_chart(fig_grid, use_container_width=True)
 
 # =========================
-# DATA VALIDATION
+# BEFORE vs AFTER COUPLING (TRUSTED DAYS)
 # =========================
-st.subheader("Data Trust & Energy Balance Validation")
+st.subheader("Before vs After Coupling (Trusted Days Only)")
 
-st.dataframe(
-    filtered_df[
-        [
-            "Month",
-            "Billing_Cycles_Used",
-            "Data_Trust",
-            "Energy_Balance_Check"
-        ]
-    ],
-    use_container_width=True
-)
+coupling_df = df[
+    (df["Year"] == 2025) &
+    (df["Data_Trust"].isin(["High", "Medium"]))
+].copy()
+
+def coupling_status(month):
+    if month in ["Ja]()
