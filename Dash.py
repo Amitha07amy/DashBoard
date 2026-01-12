@@ -201,4 +201,44 @@ coupling_df = df[
 ].copy()
 
 def coupling_status(month):
-    if month in ["Ja]()
+    if month in ["January", "February", "March"]:
+        return "Before Coupling"
+    elif month == "April":
+        return "Transition"
+    else:
+        return "After Coupling"
+
+coupling_df["Coupling_Status"] = coupling_df["Month"].apply(coupling_status)
+
+agg_df = coupling_df.groupby("Coupling_Status")[[
+    "Grid_Import_kWh",
+    "Solar_Self_kWh",
+    "Solar_Gen_kWh"
+]].sum().reset_index()
+
+fig_coupling = px.bar(
+    agg_df,
+    x="Coupling_Status",
+    y=["Grid_Import_kWh", "Solar_Self_kWh", "Solar_Gen_kWh"],
+    barmode="group",
+    labels={"value": "Energy (kWh)", "variable": "Metric"},
+    title="Energy Comparison – Before vs After Solar Coupling (Trusted Days)"
+)
+st.plotly_chart(fig_coupling, use_container_width=True)
+
+# =========================
+# DATA VALIDATION
+# =========================
+st.subheader("Data Trust & Energy Balance Validation")
+
+st.dataframe(
+    filtered_df[
+        [
+            "Month",
+            "Billing_Cycles_Used",
+            "Data_Trust",
+            "Energy_Balance_Check"
+        ]
+    ],
+    use_container_width=True
+)
